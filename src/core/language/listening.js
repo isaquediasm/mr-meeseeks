@@ -1,20 +1,28 @@
 import fs from 'fs'
 import logger from 'hoopa-logger'
 import recorder from 'node-record-lpcm16'
-import { postAudio } from '../../helpers/wit'
+import { Speech } from './speaking'
 
-function hotKeywordDetector() {
-	// TODO: Implement hot keyword detector logic
+// TODO: Implement hot keyword detector logic
+function activateHotwordDetector(callback) {
+	// Speech.speakFromAudio('greetings')
 
-	logger.info('Mr Meeseeks, look at me! Im listening!')
+	callback(activateHotwordDetector)
 
 	/* const recording = recorder.record({
 		sampleRate: 44100,
 	})*/
 
 	// recording.stream().pipe(postAudio())
-
-	fs.createReadStream('test-backup.wav').pipe(postAudio())
 }
 
-export { hotKeywordDetector }
+// TODO: implement recorder
+class Hearing {
+	static start() {
+		const file = fs.createReadStream('test-backup.wav')
+
+		return file
+	}
+}
+
+export { activateHotwordDetector, Hearing }

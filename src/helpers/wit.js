@@ -1,5 +1,3 @@
-import request from 'request'
-
 const WIT_TOKEN = 'A5D4YS2UV5TSNAU35SNQT3HBGDTYDZPD'
 const WIT_URL =
 	'https://api.wit.ai/speech?client=chromium&lang=en-us&output=json'
@@ -13,13 +11,4 @@ const requestConfig = {
 	},
 }
 
-function parseResult(err, resp, body) {
-	if (err) console.error(err)
-	console.log(body)
-}
-
-function postAudio() {
-	return request.post(requestConfig, parseResult)
-}
-
-export { postAudio }
+export { requestConfig }
