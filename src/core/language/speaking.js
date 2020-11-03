@@ -6,6 +6,7 @@ import fs from 'fs'
 import { mapFolder } from '../../helpers/files'
 import { pickRandomValue } from '../../helpers/array'
 import concat from 'concat-stream'
+import { EventEmitter } from '../../helpers/events'
 
 const { NlpManager, ConversationContext } = nlp
 const { dockStart } = nlpjs
@@ -49,7 +50,7 @@ const answers = {
 	},
 }
 
-const documents = {
+const example_documents = {
 	en: [
 		{
 			input: 'play me a song',
@@ -69,15 +70,15 @@ const documents = {
 	],
 }
 
-class NLP {
-	static async train() {
+class NLPManager {
+	async train(documents = example_documents, defaultIntent) {
 		logger.info('training nlp analysis...')
 
-		this.addDocuments(documents)
+		this.addDocuments(documents, defaultIntent)
 		LanguageManager.train()
 	}
 
-	static async process(message) {
+	async process(message) {
 		logger.info(`processing the message "${message}"`)
 
 		const response = await LanguageManager.process('en', message)
@@ -90,13 +91,14 @@ class NLP {
 	 * language manager.
 	 *
 	 * @param {Array} docs
+	 * @param {String} intent
 	 */
-	static addDocuments(docs) {
-		docs.en.map((item) => {
-			LanguageManager.addDocument('en', item.input, item.intent)
+	addDocuments(docs, defaultIntent) {
+		docs.en.map(({ input, answer, intent = defaultIntent }) => {
+			LanguageManager.addDocument('en', input, intent)
 
-			if (item.answer) {
-				LanguageManager.addAnswer('en', item.intent, item.answer)
+			if (answer) {
+				LanguageManager.addAnswer('en', intent, answer)
 			}
 		})
 	}
@@ -107,8 +109,12 @@ const MEESEEKS_AUDIOS = {
 	greeting: [`${AUDIOS_PATH}/look.wav`],
 }
 
-class Speech {
-	static createSpeaker(callback) {
+class SpeechManager {
+	constructor() {
+		EventEmitter.on('speech_manager', this.speak)
+	}
+
+	createSpeaker(callback) {
 		const speaker = new Speaker({
 			channels: 1,
 			bitDepth: 16,
@@ -127,7 +133,7 @@ class Speech {
 		return speaker
 	}
 
-	static async getAudio(audioId) {
+	async getAudio(audioId) {
 		try {
 			const files = await mapFolder('audios')
 			const audioPath = pickRandomValue(files?.[audioId])
@@ -145,7 +151,7 @@ class Speech {
 	 *
 	 * @param {String} audioId
 	 */
-	static async speakFromAudio(audioId) {
+	async speakFromAudio(audioId) {
 		return new Promise(async (res, rej) => {
 			try {
 				const speaker = this.createSpeaker(res)
@@ -153,7 +159,7 @@ class Speech {
 
 				// creates a buffer from the audio read stream
 				const concatStream = concat((buffer) => {
-					speaker.write(Buffer.from(buffer), () => {
+					speaker.write(Bsuffer.from(buffer), () => {
 						// closes the speaker
 						setTimeout(() => speaker.close(), 1000)
 					})
@@ -167,6 +173,16 @@ class Speech {
 			}
 		})
 	}
+
+	speak(message) {
+		logger.info(`Mr. Meeseeks says: ${message}`)
+	}
+	errorMessage() {
+		this.speakFromAudio
+	}
 }
+
+const NLP = new NLPManager()
+const Speech = new SpeechManager()
 
 export { processMessage, NLP, Speech }

@@ -7,19 +7,20 @@ import { activateHotwordDetector, Hearing } from './core/language/listening'
 import { NLP } from './core/language/speaking'
 import { processAudio } from './core/language/comprehension'
 import { subscribeSkills } from './skills'
+import { pipe } from './helpers/math'
+import { Music } from './skills/music'
 
 async function init() {
-	NLP.train()
-	subscribeSkills()
+	try {
+		subscribeSkills([Music])
 
-	activateHotwordDetector(async (restart) => {
-		try {
+		activateHotwordDetector(async (restart) => {
 			// iniializes the recorder
 			Hearing.start().pipe(processAudio())
-		} catch (err) {
-			logger.error(err)
-		}
-	})
+		})
+	} catch (err) {
+		logger.error(err)
+	}
 
 	/* const response = await processMessage('give me 10 songs')
 	console.log(response) */

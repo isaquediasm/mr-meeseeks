@@ -1,33 +1,26 @@
 import request from 'request'
-import { EventEmitter } from '../../helpers/events'
+import { broadcastEvent, EventEmitter } from '../../helpers/events'
 import { requestConfig } from '../../helpers/wit'
-import { processMessage, NLP, Speech } from './speaking'
+import { NLP, Speech } from './speaking'
 
 function findMainIntent(intents) {
 	return intents.sort((a, b) => b.confidence - a.confidence)[0]
 }
 
-function analyseMessage(message) {
-	if (!message.intents.length) {
-		// EventEmitter.emit('conversation', { intent: ''})
-		// TODO: Dispatch a "i dont understand" message
-	}
-
-	const mainIntent = findMainIntent(message.intents)
-	EventEmitter.emit(mainIntent.name, message)
-}
-
-/**
- * Sends audio to wit.ai
- */
 function processAudio() {
-	const parseResult = (err, resp, body) => {
+	const parseResult = async (err, resp, body) => {
 		if (err) console.error(err)
 
 		const transcription = JSON.parse(body)
+		const intent = findMainIntent(transcription.intents)
+		const processed = await NLP.process(transcription.text)
 
-		analyseMessage(transcription)
-		console.log(body)
+		// sends out the message to its stakeholders
+		EventEmitter.emit(intent.name, transcription)
+
+		// calls the speech manager with the current message
+		EventEmitter.emit('speech_manager', processed?.answer)
+
 		// Speech.speakFromAudio('ok')
 		//	processMessage(transcription.text)
 
@@ -35,6 +28,9 @@ function processAudio() {
 		// NLP.process(transcription.text)
 	}
 
+	/**
+	 * Sends audio to wit.ai
+	 */
 	return request.post(requestConfig, parseResult)
 }
 
