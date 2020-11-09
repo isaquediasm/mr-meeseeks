@@ -14,6 +14,9 @@ async function init() {
 	try {
 		subscribeSkills([Music])
 
+		const fn = () => {
+			return processAudio()
+		}
 		activateHotwordDetector(async (restart) => {
 			// iniializes the recorder
 			Hearing.start().pipe(processAudio())

@@ -16,12 +16,28 @@ function activateHotwordDetector(callback) {
 	// recording.stream().pipe(postAudio())
 }
 
+const recording = recorder.record({
+	sampleRate: 44100,
+	endOnSilence: true,
+})
+
 // TODO: implement recorder
 class Hearing {
-	static start() {
-		const file = fs.createReadStream('test-backup.wav')
+	static start(cb) {
+		/* const file = fs.createReadStream('test-backup.wav')
+		
+		return file */
 
-		return file
+		const cbFn = () => {
+			recording.stop()
+			cb()
+		}
+
+		return recording.stream()
+		//	return recording.start()
+	}
+	static stop() {
+		return recording.stop()
 	}
 }
 

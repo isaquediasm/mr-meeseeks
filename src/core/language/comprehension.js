@@ -12,6 +12,8 @@ function processAudio() {
 		if (err) console.error(err)
 
 		const transcription = JSON.parse(body)
+
+		console.log('##result', transcription)
 		const intent = findMainIntent(transcription.intents)
 		const processed = await NLP.process(transcription.text)
 
