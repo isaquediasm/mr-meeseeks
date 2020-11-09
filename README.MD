@@ -14,4 +14,4 @@ Meeseeks is your lightweight home assistent built on Javascript
 
 - [x] Ability to record from microphone and transcribe recorded audio
 - [x] Ability to process the transcribed audio and trigger a skill
-- [] Activation by hotword
+- [ ] Activation by hotword
