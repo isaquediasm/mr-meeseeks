@@ -4,6 +4,10 @@ import { requestConfig } from '../../helpers/wit'
 import { NLP, Speech } from './speaking'
 
 function findMainIntent(intents) {
+	if (intents.length) {
+		return { name: 'not_found' }
+	}
+
 	return intents.sort((a, b) => b.confidence - a.confidence)[0]
 }
 
@@ -13,7 +17,6 @@ function processAudio() {
 
 		const transcription = JSON.parse(body)
 
-		console.log('##result', transcription)
 		const intent = findMainIntent(transcription.intents)
 		const processed = await NLP.process(transcription.text)
 
