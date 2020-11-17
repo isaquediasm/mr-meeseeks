@@ -4,7 +4,7 @@ import { requestConfig } from '../../helpers/wit'
 import { NLP, Speech } from './speaking'
 
 function findMainIntent(intents) {
-	if (intents.length) {
+	if (!intents || !intents.length) {
 		return { name: 'not_found' }
 	}
 
@@ -20,11 +20,18 @@ function processAudio() {
 		const intent = findMainIntent(transcription.intents)
 		const processed = await NLP.process(transcription.text)
 
+		console.log('##processed', processed)
+		if (!processed.answer) {
+			return EventEmitter.emit(
+				'speech_manager',
+				`Sorry but I don't understand what you just said`
+			)
+		}
+
 		// sends out the message to its stakeholders
 		EventEmitter.emit(intent.name, transcription)
-
 		// calls the speech manager with the current message
-		EventEmitter.emit('speech_manager', processed?.answer)
+		return EventEmitter.emit('speech_manager', processed?.answer)
 
 		// Speech.speakFromAudio('ok')
 		//	processMessage(transcription.text)

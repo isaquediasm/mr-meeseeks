@@ -7,9 +7,15 @@ import { mapFolder } from '../../helpers/files'
 import { pickRandomValue } from '../../helpers/array'
 import concat from 'concat-stream'
 import { EventEmitter } from '../../helpers/events'
+import AWS from 'aws-sdk'
 
 const { NlpManager, ConversationContext } = nlp
 const { dockStart } = nlpjs
+
+const Polly = new AWS.Polly({
+	signatureVersion: 'v4',
+	region: 'us-east-1',
+})
 
 const DEFAULT_LANG = 'EN'
 const CORPUS_PATH = {
@@ -109,6 +115,44 @@ const MEESEEKS_AUDIOS = {
 	greeting: [`${AUDIOS_PATH}/look.wav`],
 }
 
+const createSentence = (sentence) => {
+	const Text = `
+		<speak>
+			<amazon:effect vocal-tract-length="+5%">
+				<amazon:auto-breaths>
+					${sentence}
+				</amazon:auto-breaths>
+			</amazon:effect>
+		</speak>
+	`
+
+	return {
+		Text,
+		SampleRate: '8000',
+		OutputFormat: 'pcm',
+		TextType: 'ssml',
+		VoiceId: 'Joanna',
+	}
+}
+
+const createSpeaker = (callback) => {
+	const speaker = new Speaker({
+		channels: 1,
+		bitDepth: 16,
+		sampleRate: 8000,
+	})
+
+	speaker.on('open', () => {
+		logger.info('Speaker opened')
+	})
+
+	speaker.on('close', () => {
+		logger.info('Speaker closed')
+		callback()
+	})
+
+	return speaker
+}
 class SpeechManager {
 	constructor() {
 		EventEmitter.on('speech_manager', this.speak)
@@ -175,11 +219,26 @@ class SpeechManager {
 	}
 
 	speak(message) {
-		logger.info(`Mr. Meeseeks says: ${message}`)
+		return new Promise(async (resolve, reject) => {
+			Polly.synthesizeSpeech(createSentence(message), (err, res) => {
+				if (err || !(res.AudioStream instanceof Buffer)) {
+					reject(err || 'Not is a buffer')
+				}
+
+				const speaker = createSpeaker(resolve)
+
+				try {
+					speaker.write(Buffer.from(res.AudioStream), () => {
+						setTimeout(() => speaker.close(), 800)
+					})
+				} catch (error) {
+					logger.error(`Error opening speaker: ${error}`)
+				}
+			})
+		})
 	}
-	errorMessage() {
-		this.speakFromAudio
-	}
+
+	errorMessage() {}
 }
 
 const NLP = new NLPManager()

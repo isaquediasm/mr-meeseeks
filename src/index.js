@@ -9,14 +9,12 @@ import { processAudio } from './core/language/comprehension'
 import { subscribeSkills } from './skills'
 import { pipe } from './helpers/math'
 import { Music } from './skills/music'
+import { Greeting } from './skills/greeting'
 
 async function init() {
 	try {
-		subscribeSkills([Music])
+		subscribeSkills([Music, Greeting])
 
-		const fn = () => {
-			return processAudio()
-		}
 		activateHotwordDetector(async (restart) => {
 			// iniializes the recorder
 			Hearing.start().pipe(processAudio())
